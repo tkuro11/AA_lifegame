@@ -6,21 +6,21 @@
 
 const int W = 60;
 const int H = 40;
-const int PERIOD = 1000;
 
 int _sum_around(char board[H][W], int x, int y) {
     int sum = 0;
-    for (int ly= y-1; ly <= y+1; ly++) {
-        for (int lx= x-1; lx <= x+1; lx++) {
-            if (0 <= lx && lx < W &&
-                0 <= ly && ly < H && board[ly][lx] == '*') {
-                sum += 1;
-            }
+    int d[8][2]= { {-1,-1}, {0, -1}, {1, -1},
+                   {-1, 0},          {1,  0},
+                   {-1, 1}, {0,  1}, {1,  1} };
+
+    for (int i= 0; i < 8; i++) {
+        int lx = x + d[i][0], ly = y + d[i][1];
+        if (0 <= lx && lx < W &&
+            0 <= ly && ly < H && board[ly][lx] == '*') {
+            sum += 1;
         }
     }
-    if (board[y][x] == '*') {
-        sum -= 1;
-    }
+
     return sum;
 }
 
@@ -28,6 +28,7 @@ void clear()
 {
     printf("\033[2J");
 }
+
 void home()
 {
     printf("\033[0;0f");
