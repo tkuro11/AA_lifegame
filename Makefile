@@ -1,3 +1,10 @@
-all: lifegame
+.PHONY: all clean
+TARGET=lifegame
 
-lifegame: lifegame.o
+all: ${TARGET}
+
+clean:
+	rm -f ${TARGET}
+	rm -f *.o
+
+${TARGET}: ${TARGET}.o
