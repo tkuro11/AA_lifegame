@@ -7,7 +7,11 @@
 const int W = 60;
 const int H = 40;
 
-int _sum_around(char board[H][W], int x, int y) {
+#define N 16      // the size of hash buffer (MUSTBE even)
+const int MAX_STRIDE = N/2;
+
+
+int sum_surrounding(char board[H][W], int x, int y) {
     int sum = 0;
     int d[8][2]= { {-1,-1}, {0, -1}, {1, -1},
                    {-1, 0},          {1,  0},
@@ -16,7 +20,7 @@ int _sum_around(char board[H][W], int x, int y) {
     for (int i= 0; i < 8; i++) {
         int lx = x + d[i][0], ly = y + d[i][1];
         if (0 <= lx && lx < W &&
-            0 <= ly && ly < H && board[ly][lx] == '*') {
+            0 <= ly && ly < H && board[ly][lx] == 1) {
             sum += 1;
         }
     }
@@ -24,24 +28,40 @@ int _sum_around(char board[H][W], int x, int y) {
     return sum;
 }
 
-void clear()
+void clear() { printf("\033[2J"); }
+void home() { printf("\033[0;0f"); }
+
+void _count_board(char board[H][W], char ret[H][W])
 {
-    printf("\033[2J");
+    for (int y = 0; y< H; y++) {
+        for (int x = 0; x< W; x++) {
+            ret[y][x] = sum_surrounding(board, x, y);
+        }
+    }
 }
 
-void home()
+/// [private] Function to get "fingerprint" of the board situation
+//  (in the current impl. it's just by counting live point.)
+long _hash_board(char board[H][W])
 {
-    printf("\033[0;0f");
-}
+    unsigned int ret = 0;
 
+    for (int y = 0; y< H; y++) {
+        for (int x = 0; x< W; x++) {
+            ret += board[y][x];
+        }
+    }
+    return ret;
+    
+}
 void initialize_board(char board[H][W])
 {
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
             if (rand() % 100 < 30) {
-                board[y][x] = '*';
+                board[y][x] = 1;
             } else {
-                board[y][x] = ' ';
+                board[y][x] = 0;
             }
         }
     }
@@ -49,9 +69,10 @@ void initialize_board(char board[H][W])
 
 void display_board(char board[H][W])
 {
+    char c[] = {' ', '#'};
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
-            printf("%c", board[y][x]);
+            printf("%c", c[board[y][x]]);
         }
         printf("\n");
     }
@@ -64,19 +85,19 @@ void refresh_board(char board[H][W])
 
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
-            sum_mtx[y][x] = _sum_around(board, x, y);
+            sum_mtx[y][x] = sum_surrounding(board, x, y);
         }
     }
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
             int sum = sum_mtx[y][x];
-            int c = ' ';
+            int c = 0;
             if (// survivor
-                (board[y][x] == '*' && sum == 2 || sum == 3)
+                (board[y][x] == 1 && sum == 2 || sum == 3)
              || // newborn 
-                (board[y][x] == ' ' && sum == 3)
+                (board[y][x] == 0 && sum == 3)
             ) {
-                c = '*';
+                c = 1;
             }
             board[y][x] = c;
         }
