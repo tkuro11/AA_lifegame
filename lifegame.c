@@ -12,6 +12,10 @@ const int MAX_STRIDE = N/2;
 
 void _clear() { printf("\033[2J"); }
 void _home() { printf("\033[0;0f"); }
+void _color(int c) {
+    if (c < 0) { printf("\033[0m");
+    } else     { printf("\033[48;5;%dm", c); }
+}
 
 int _sum_surrounding(char board[H][W], int x, int y) {
     int sum = 0;
@@ -128,20 +132,36 @@ void initialize_board(char board[H][W])
     }
 }
 
-void display_board(char board[H][W])
+int _color_pallete(int col, int cbank)
 {
-    char c[] = {' ', '#'};
+    return col*2 + 0x10*(cbank&0x0f);
+}
+
+void display_board(char board[H][W], int cbank)
+{
+    char sum_mtx[H][W];
+
+    if (cbank) {
+        _count_board(board, sum_mtx);
+    }
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
-            printf("%c", c[board[y][x]]);
+            int c = 0;
+            if (board[y][x]) {
+                if (cbank) {c = _color_pallete(sum_mtx[y][x], cbank);}
+                else       {c = 255; }
+            } 
+            _color(c);
+            printf("　");
         }
+        _color(-1);
         printf("\n");
     }
 }
 
-void refresh_board(char board[H][W])
+void advance_board_state(char board[H][W])
 {
-    char  sum_mtx[H][W];
+    char sum_mtx[H][W];
 
     _count_board(board, sum_mtx); // at first, make a counting matrix.
     for (int y = 0; y< H; y++) {
@@ -179,8 +199,8 @@ int main(int argc, char** argv)
     while (true) {
         _home();
         printf("GEN=%5d\n", generation);
-        display_board(board);
-        refresh_board(board);
+        display_board(board, 1);
+        advance_board_state(board);
         usleep(100*1000);
 
         if (++generation > 5000 || check_converged(board)) {
