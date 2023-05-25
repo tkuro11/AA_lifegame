@@ -57,7 +57,7 @@ void display_board(char board[H][W])
     }
 }
 
-int refresh_board(char board[H][W])
+void refresh_board(char board[H][W])
 {
     char c, sum_mtx[H][W];
     int flag = 0;
@@ -70,31 +70,23 @@ int refresh_board(char board[H][W])
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
             int sum = sum_mtx[y][x];
-            if (board[y][x] == '*') {
-                if (sum == 2 || sum == 3) {
-                    c = '*';
-                } else {
-                    flag += 1;
-                    c = ' ';
-                }
-            } else {
-                if (sum == 3) {
-                    flag += 1;
-                    c = '*';
-                } else {
-                    c = ' ';
-                }
+            int c = ' ';
+            if (// survivor
+                (board[y][x] == '*' && sum == 2 || sum == 3)
+             || // newborn 
+                (board[y][x] == ' ' && sum == 3)
+            ) {
+                c = '*';
             }
             board[y][x] = c;
         }
     }
-    return flag;
 }
 
 int main(void)
 {
     char board[H][W];
-    int generation = 0, variance, prev = 1000;
+    int generation = 0;
     srand((unsigned int) time(NULL));
 
     clear();
@@ -103,13 +95,14 @@ int main(void)
         home();
         printf("GEN=%d\n", ++generation);
         display_board(board);
-        variance = refresh_board(board);
-        if (generation > 300 || prev < 5 && prev == variance) {
-            generation = 0;
+        refresh_board(board);
+        if (generation > 300) {
+            printf("\nreset scene\n");
             initialize_board(board);
+            generation = 1;
+            sleep(2);
             clear();
         }
-        prev = variance;
         usleep(100*1000);
     }
 }
