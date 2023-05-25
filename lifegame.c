@@ -37,17 +37,16 @@ void home()
 bool load_board(char *filename, char board[H][W])
 {
     FILE* fp;
+    int x,y;
     int c;
 
     if ((fp = fopen(filename, "r")) == NULL) {
         return false;
     }
-    for (int y = 0; y< H; y++) {
-        for (int x = 0; x< W; x++) {
-            if ((c = fgetc(fp)) == EOF) {
-                fclose(fp);
-                return false;
-            } else if (c == '\n') { // if line ends before the last column,
+    for (y = 0; y< H; y++) {
+        for (x = 0; x< W; x++) {
+            if ((c = fgetc(fp)) == EOF) break;
+            else if (c == '\n') { // if line ends before the last column,
                 for (; x< W; x++) { // fill remaining to '0'.
                     board[y][x] = ' ';
                 }
@@ -57,11 +56,15 @@ bool load_board(char *filename, char board[H][W])
                 board[y][x] = ' ';
             }
         }
-	if (c != '\n') {
-	    while (fgetc(fp) != '\n') ;
-	}
+        if (c == EOF) break;
+        else if (c != '\n') {
+            while (fgetc(fp) != '\n') ;
+        }
     }
     fclose(fp);
+    for (; y< H; y++) { // fill remaining lines all ' '(blank)
+        for (x=0; x< W; x++) { board[y][x] = ' '; }
+    }
     return true;
 }
 void initialize_board(char board[H][W])
@@ -119,8 +122,11 @@ int main(int argc, char** argv)
     int generation = 0;
     srand((unsigned int) time(NULL));
 
-    if (argc == 2) {
-        load_board(argv[1], board);
+    if (argc == 2){
+        if (!load_board(argv[1], board)) {
+            fprintf(stderr, "something wrong with '%s'... abort\n", argv[1]);
+            return -1;
+        }
     } else {
         initialize_board(board);
     }
