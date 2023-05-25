@@ -3,13 +3,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <ctype.h>
 
 const int W = 60;
 const int H = 40;
 
-#define N 16      // the size of hash buffer (MUSTBE even)
-const int MAX_STRIDE = N/2;
-
+/// utility routines for terminal control
 void _clear() { printf("\033[2J"); }
 void _home() { printf("\033[0;0f"); }
 void _color(int c) {
@@ -17,6 +16,8 @@ void _color(int c) {
     } else     { printf("\033[48;5;%dm", c); }
 }
 
+/// [private] Function to count the number of live points in the 
+//  8-neighborhood of specified point.
 int _sum_surrounding(char board[H][W], int x, int y) {
     int sum = 0;
     int d[8][2]= { {-1,-1}, {0, -1}, {1, -1},
@@ -34,7 +35,8 @@ int _sum_surrounding(char board[H][W], int x, int y) {
     return sum;
 }
 
-
+/// [private] Function to count the number of live points in the
+//  8-neighborhood of each point.
 void _count_board(char board[H][W], char ret[H][W])
 {
     for (int y = 0; y< H; y++) {
@@ -93,6 +95,9 @@ bool load_board(char *filename, char board[H][W])
     return true;
 }
 
+#define N 16      // the size of ring buffer (MUSTBE even)
+const int MAX_STRIDE = N/2;
+
 bool _check_stride(unsigned int ary[], int stride)
 {
     for (int j = 0; j < stride; j++) {
@@ -104,6 +109,14 @@ bool _check_stride(unsigned int ary[], int stride)
     return true;
 }
 
+/// Check whether the board is converged or not.
+//  The method for checking is,
+//   1) calculate the fingerprint(integer value) of the board
+//      [_hash_board()]
+//   2) store it to the ring buffer
+//   3) check iteration from 1 to MAX_STRIDE in the ring
+//      [_check_stride()]
+//      
 bool check_converged(char board[H][W])
 {
     static unsigned int hash[N];
@@ -159,11 +172,13 @@ void display_board(char board[H][W], int cbank)
     }
 }
 
+/// Function to advance the game state by one move.
 void update_board_state(char board[H][W])
 {
     char sum_mtx[H][W];
 
-    _count_board(board, sum_mtx); // at first, make a counting matrix.
+    _count_board(board, sum_mtx); // count living points for each point 
+                                  //
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
             int sum = sum_mtx[y][x];
@@ -180,29 +195,49 @@ void update_board_state(char board[H][W])
     }
 }
 
+int _shift_array(char* ary[], int size, int n_remove)
+{
+    int new_size = size - n_remove;
+    for (int i = 0; i< new_size; i++) {
+        ary[i] = ary[i+n_remove];
+    }
+    return new_size;
+}
+
+#define _MS *1000  // dirty...
+#define SHIFT_ARGS(n)  {argc = _shift_array(argv, argc, n);}
+
 int main(int argc, char** argv)
 {
     char board[H][W];
     int generation = 1;
     int wait = 50;  // ms
     int cbank = 0;
+
     srand((unsigned int) time(NULL));
 
-    if (argc >= 3 && argv[1][0] == '-') {
-        char opt = argv[1][1];
-        if (opt == 'w') {
-            wait = atoi(argv[2]);
-        } else if (opt == 'c') {
-            cbank = atoi(argv[2]);
-        }
-        argc -= 2;
-        for (int i = 1; i < argc; i++) {
-            argv[i] = argv[i+2];
-        };
+    SHIFT_ARGS(1); // cut executable name
+    while (argc > 0) {
+        if (argv[0][0] == '-') {
+            char opt = argv[0][1];
+            if (opt == 'w') {
+                wait = atoi(argv[1]);
+                SHIFT_ARGS(2);
+            } else 
+            if (opt == 'c') {
+                if (isdigit(argv[1][0])) {
+                    cbank = atoi(argv[1]);
+                    SHIFT_ARGS(2);
+                } else { // choose color randomly
+                    cbank = -(rand() % 15+1);
+                    SHIFT_ARGS(1);
+                }
+            }
+        } else break;
     }
 
-    if (argc == 2) {
-        if (!load_board(argv[1], board)) {
+    if (argc > 0) {
+        if (!load_board(argv[0], board)) {
             fprintf(stderr, "something wrong with '%s'... abort\n", argv[1]);
             return -1;
         }
@@ -216,7 +251,7 @@ int main(int argc, char** argv)
         printf("GEN=%5d\n", generation);
         display_board(board, cbank);
         update_board_state(board);
-        usleep(wait *1000);
+        usleep(wait _MS);
 
         if (++generation > 5000 || check_converged(board)) {
             printf("\n*** CONVERGED!! ***\n");
