@@ -159,7 +159,7 @@ void display_board(char board[H][W], int cbank)
     }
 }
 
-void advance_board_state(char board[H][W])
+void update_board_state(char board[H][W])
 {
     char sum_mtx[H][W];
 
@@ -184,9 +184,24 @@ int main(int argc, char** argv)
 {
     char board[H][W];
     int generation = 1;
+    int wait = 50;  // ms
+    int cbank = 0;
     srand((unsigned int) time(NULL));
 
-    if (argc == 2){
+    if (argc >= 3 && argv[1][0] == '-') {
+        char opt = argv[1][1];
+        if (opt == 'w') {
+            wait = atoi(argv[2]);
+        } else if (opt == 'c') {
+            cbank = atoi(argv[2]);
+        }
+        argc -= 2;
+        for (int i = 1; i < argc; i++) {
+            argv[i] = argv[i+2];
+        };
+    }
+
+    if (argc == 2) {
         if (!load_board(argv[1], board)) {
             fprintf(stderr, "something wrong with '%s'... abort\n", argv[1]);
             return -1;
@@ -199,14 +214,17 @@ int main(int argc, char** argv)
     while (true) {
         _home();
         printf("GEN=%5d\n", generation);
-        display_board(board, 1);
-        advance_board_state(board);
-        usleep(100*1000);
+        display_board(board, cbank);
+        update_board_state(board);
+        usleep(wait *1000);
 
         if (++generation > 5000 || check_converged(board)) {
             printf("\n*** CONVERGED!! ***\n");
             initialize_board(board);
             generation = 1;
+            if (cbank < 0) {
+                cbank = -(rand() % 0x0f+1);
+            }
             sleep(2);
             _clear();
         }
