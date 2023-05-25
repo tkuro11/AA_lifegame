@@ -34,6 +34,36 @@ void home()
     printf("\033[0;0f");
 }
 
+bool load_board(char *filename, char board[H][W])
+{
+    FILE* fp;
+    int c;
+
+    if ((fp = fopen(filename, "r")) == NULL) {
+        return false;
+    }
+    for (int y = 0; y< H; y++) {
+        for (int x = 0; x< W; x++) {
+            if ((c = fgetc(fp)) == EOF) {
+                fclose(fp);
+                return false;
+            } else if (c == '\n') { // if line ends before the last column,
+                for (; x< W; x++) { // fill remaining to '0'.
+                    board[y][x] = ' ';
+                }
+            } else if (c != ' ') {
+                board[y][x] = '*';
+            } else {
+                board[y][x] = ' ';
+            }
+        }
+	if (c != '\n') {
+	    while (fgetc(fp) != '\n') ;
+	}
+    }
+    fclose(fp);
+    return true;
+}
 void initialize_board(char board[H][W])
 {
     for (int y = 0; y< H; y++) {
@@ -83,14 +113,19 @@ void refresh_board(char board[H][W])
     }
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
     char board[H][W];
     int generation = 0;
     srand((unsigned int) time(NULL));
 
+    if (argc == 2) {
+        load_board(argv[1], board);
+    } else {
+        initialize_board(board);
+    }
+
     clear();
-    initialize_board(board);
     while (true) {
         home();
         printf("GEN=%d\n", ++generation);
