@@ -21,7 +21,7 @@ int _color_pallete(int col, int cbank)
     if (col == 0)
         return 0;
     else
-        return (col-1) + 0x8*(cbank-1);
+        return (col-1) + 0x8*(cbank-1) + 1;
 }
 
 void usage(char *progname)
