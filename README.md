@@ -11,7 +11,7 @@ just
 ```
 ./lifegame [-h] [-w wait(in ms)] [-c colormap(1 - 32)] [filename]
 ```
-By default, initial scene is will be randomly generated.
+By default, initial scene will be randomly generated.
 If a "filename" is specified, the initial scene will be the content of that file.
 
 following options are available:
