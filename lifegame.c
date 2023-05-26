@@ -16,6 +16,28 @@ void _color(int c) {
     } else     { printf("\033[48;5;%dm", c); }
 }
 
+int _color_pallete(int col, int cbank)
+{
+    return col + 0x10*cbank;
+}
+
+void usage(char *progname)
+{
+    printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [filename]\n"
+            "ColormapList:", progname);
+    for (int i = 1; i<= 16; i++) {
+        _color(-1);
+        printf("\nMAP %2d: ", i);
+        for (int j = 1; j< 15; j++) {
+            _color(_color_pallete(j, i));
+            printf("　");
+        }
+    }
+    printf("\n");
+
+    exit(1);
+}
+
 /// [private] Function to count the number of live points in the 
 //  8-neighborhood of specified point.
 int _sum_surrounding(char board[H][W], int x, int y) {
@@ -145,11 +167,6 @@ void initialize_board(char board[H][W])
     }
 }
 
-int _color_pallete(int col, int cbank)
-{
-    return col*2 + 0x10*(cbank&0x0f);
-}
-
 void display_board(char board[H][W], int cbank)
 {
     char sum_mtx[H][W];
@@ -213,6 +230,8 @@ int main(int argc, char** argv)
     int generation = 1;
     int wait = 50;  // ms
     int cbank = 0;
+    bool random_color = false;
+    char *progname = argv[0];
 
     srand((unsigned int) time(NULL));
 
@@ -220,6 +239,9 @@ int main(int argc, char** argv)
     while (argc > 0) {
         if (argv[0][0] == '-') {
             char opt = argv[0][1];
+            if (opt == 'h') {
+                usage(progname);
+            } else
             if (opt == 'w') {
                 wait = atoi(argv[1]);
                 SHIFT_ARGS(2);
@@ -229,7 +251,8 @@ int main(int argc, char** argv)
                     cbank = atoi(argv[1]);
                     SHIFT_ARGS(2);
                 } else { // choose color randomly
-                    cbank = -(rand() % 15+1);
+                    cbank = (rand() % 15+1);
+                    random_color = true;
                     SHIFT_ARGS(1);
                 }
             }
@@ -257,8 +280,8 @@ int main(int argc, char** argv)
             printf("\n*** CONVERGED!! ***\n");
             initialize_board(board);
             generation = 1;
-            if (cbank < 0) {
-                cbank = -(rand() % 0x0f+1);
+            if (random_color) {
+                cbank = rand() % 16+1;
             }
             sleep(2);
             _clear();
