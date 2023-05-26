@@ -15,6 +15,7 @@ void _color(int c) {
     if (c < 0) { printf("\033[0m");
     } else     { printf("\033[48;5;%dm", c); }
 }
+void _reset_terminal() { _color(-1); }
 
 int _color_pallete(int col, int cbank)
 {
@@ -29,12 +30,12 @@ void usage(char *progname)
     printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [filename]\n"
             "ColormapList:", progname);
     for (int i = 1; i< 33; i++) {
-        _color(-1);
         printf("\nMAP %2d: ", i);
         for (int j = 1; j< 8; j++) {
             _color(_color_pallete(j, i));
             printf("　");
         }
+        _reset_terminal();
     }
     printf("\n");
 
@@ -187,7 +188,7 @@ void display_board(char board[H][W], int cbank)
             _color(c);
             printf("　");
         }
-        _color(-1);
+        _reset_terminal();
         printf("\n");
     }
 }
@@ -236,6 +237,7 @@ int main(int argc, char** argv)
     bool random_color = false;
     char *progname = argv[0];
 
+    atexit(_reset_terminal);
     srand((unsigned int) time(NULL));
 
     SHIFT_ARGS(1); // cut executable name
