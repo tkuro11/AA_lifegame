@@ -18,17 +18,20 @@ void _color(int c) {
 
 int _color_pallete(int col, int cbank)
 {
-    return col + 0x10*cbank;
+    if (col == 0)
+        return 0;
+    else
+        return (col-1) + 0x8*(cbank-1);
 }
 
 void usage(char *progname)
 {
     printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [filename]\n"
             "ColormapList:", progname);
-    for (int i = 1; i<= 16; i++) {
+    for (int i = 1; i< 33; i++) {
         _color(-1);
         printf("\nMAP %2d: ", i);
-        for (int j = 1; j< 15; j++) {
+        for (int j = 1; j< 8; j++) {
             _color(_color_pallete(j, i));
             printf("　");
         }
@@ -251,7 +254,7 @@ int main(int argc, char** argv)
                     cbank = atoi(argv[1]);
                     SHIFT_ARGS(2);
                 } else { // choose color randomly
-                    cbank = (rand() % 15+1);
+                    cbank = (rand() % 32+1);
                     random_color = true;
                     SHIFT_ARGS(1);
                 }
@@ -281,7 +284,7 @@ int main(int argc, char** argv)
             initialize_board(board);
             generation = 1;
             if (random_color) {
-                cbank = rand() % 16+1;
+                cbank = rand() % 32+1;
             }
             sleep(2);
             _clear();
