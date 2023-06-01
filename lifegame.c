@@ -124,15 +124,19 @@ bool load_board(char *filename, char board[H][W])
 #define N 16      // the size of ring buffer (MUSTBE even)
 const int MAX_STRIDE = N/2;
 
-bool _check_stride(unsigned int ary[], int stride)
+int _check_stride(unsigned int ary[], int stride)
 {
+    int level = 0;
     for (int j = 0; j < stride; j++) {
         int elem = ary[j];
+        level += 1;
         for (int i = j+stride; i < N; i+=stride) {
-            if (elem != ary[i]) return false;
+            if (elem == ary[i]) {
+                level += 1;
+            }
         }
     }
-    return true;
+    return level;
 }
 
 /// Check whether the board is converged or not.
@@ -143,19 +147,20 @@ bool _check_stride(unsigned int ary[], int stride)
 //   3) check iteration from 1 to MAX_STRIDE in the ring
 //      [_check_stride()]
 //      
-bool check_converged(char board[H][W])
+int check_converged(char board[H][W])
 {
     static unsigned int hash[N];
     static int hash_ptr = 0;
-    bool ret = true;
+    int max = 0;
 
     hash[hash_ptr] = _hash_board(board);
     hash_ptr = (hash_ptr + 1) % N;
 
     for (int s = 1; s< MAX_STRIDE; s++) {
-        if (_check_stride(hash, s)) return true;
+        int v = _check_stride(hash, s);
+        if (v > max) {max = v;}
     }
-    return false;
+    return max;
 }
 
 void initialize_board(char board[H][W])
@@ -281,7 +286,8 @@ int main(int argc, char** argv)
         update_board_state(board);
         usleep(wait _MS);
 
-        if (++generation > 5000 || check_converged(board)) {
+        int match = check_converged(board);
+        if (++generation > 5000 || match >= N) {
             printf("\n*** CONVERGED!! ***\n");
             initialize_board(board);
             generation = 1;
