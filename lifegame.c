@@ -287,6 +287,16 @@ int main(int argc, char** argv)
         usleep(wait _MS);
 
         int match = check_converged(board);
+        _color(5);
+        for (int i = 0; i< W; i++) {
+            if (i > match * W/N) {
+                _color(-1);
+            } else {
+                _color(10);
+            }
+            printf("　");
+        }
+        _color(-1);
         if (++generation > 5000 || match >= N) {
             printf("\n*** CONVERGED!! ***\n");
             initialize_board(board);
