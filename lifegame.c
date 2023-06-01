@@ -93,7 +93,7 @@ bool load_board(char *filename, char board[H][W])
     int x,y;
     int c;
 
-    if ((fp = fopen(filename, "r")) == NULL) {
+    if ((fp = fopen(filename, "rt")) == NULL) {
         return false;
     }
     for (y = 0; y< H; y++) {
