@@ -27,7 +27,7 @@ int _color_pallete(int col, int cbank)
 
 void usage(char *progname)
 {
-    printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [filename]\n"
+    printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [-d] [filename]\n"
             "ColormapList:", progname);
     for (int i = 1; i< 33; i++) {
         printf("\nMAP %2d: ", i);
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
     int generation = 1;
     int wait = 50;  // ms
     int cbank = 0;
-    bool random_color = false;
+    bool random_color = false, debug = false;
     char *progname = argv[0];
 
     atexit(_reset_terminal);
@@ -251,6 +251,10 @@ int main(int argc, char** argv)
             char opt = argv[0][1];
             if (opt == 'h') {
                 usage(progname);
+            } else
+            if (opt == 'd') {
+                debug = true;
+                SHIFT_ARGS(1);
             } else
             if (opt == 'w') {
                 wait = atoi(argv[1]);
@@ -287,16 +291,17 @@ int main(int argc, char** argv)
         usleep(wait _MS);
 
         int match = check_converged(board);
-        _color(5);
-        for (int i = 0; i< W; i++) {
-            if (i > match * W/N) {
-                _color(-1);
-            } else {
-                _color(10);
+        if (debug) {
+            for (int i = 0; i< W; i++) {
+                if (i > match * W/N) {
+                    _color(-1);
+                } else {
+                    _color(10);
+                }
+                printf("　");
             }
-            printf("　");
+            _color(-1);
         }
-        _color(-1);
         if (++generation > 5000 || match >= N) {
             printf("\n*** CONVERGED!! ***\n");
             initialize_board(board);
