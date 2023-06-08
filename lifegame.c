@@ -9,15 +9,15 @@ const int W = 60;
 const int H = 40;
 
 /// utility routines for terminal control
-void _clear() { printf("\033[2J"); }
-void _home() { printf("\033[0;0f"); }
-void _color(int c) {
+static void _clear() { printf("\033[2J"); }
+static void _home() { printf("\033[0;0f"); }
+static void _color(int c) {
     if (c < 0) { printf("\033[0m");
     } else     { printf("\033[48;5;%dm", c); }
 }
-void _reset_terminal() { _color(-1); }
+static void _reset_terminal() { _color(-1); }
 
-int _color_pallete(int col, int cbank)
+static int _color_pallete(int col, int cbank)
 {
     if (col == 0)
         return 0;
@@ -44,7 +44,7 @@ void usage(char *progname)
 
 /// [private] Function to count the number of live points in the 
 //  8-neighborhood of specified point.
-int _sum_surrounding(char board[H][W], int x, int y) {
+static int _sum_surrounding(char board[H][W], int x, int y) {
     int sum = 0;
     int d[8][2]= { {-1,-1}, {0, -1}, {1, -1},
                    {-1, 0},          {1,  0},
@@ -63,7 +63,7 @@ int _sum_surrounding(char board[H][W], int x, int y) {
 
 /// [private] Function to count the number of live points in the
 //  8-neighborhood of each point.
-void _count_board(char board[H][W], char ret[H][W])
+static void _count_board(char board[H][W], char ret[H][W])
 {
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
@@ -74,7 +74,7 @@ void _count_board(char board[H][W], char ret[H][W])
 
 /// [private] Function to get "fingerprint" of the board situation
 //  (in the current impl. it's just by counting live point.)
-long _hash_board(char board[H][W])
+static long _hash_board(char board[H][W])
 {
     unsigned int ret = 0;
 
@@ -124,7 +124,7 @@ bool load_board(char *filename, char board[H][W])
 #define N 16      // the size of ring buffer (MUSTBE even)
 const int MAX_STRIDE = N/2;
 
-int _check_stride(unsigned int ary[], int stride)
+static int _check_stride(unsigned int ary[], int stride)
 {
     int level = 0;
     for (int j = 0; j < stride; j++) {
@@ -221,7 +221,7 @@ void update_board_state(char board[H][W])
     }
 }
 
-int _shift_array(char* ary[], int size, int n_remove)
+static int _shift_array(char* ary[], int size, int n_remove)
 {
     int new_size = size - n_remove;
     for (int i = 0; i< new_size; i++) {
