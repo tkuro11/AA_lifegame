@@ -269,6 +269,9 @@ int main(int argc, char** argv)
                     random_color = true;
                     SHIFT_ARGS(1);
                 }
+            } else {
+                fprintf(stderr, "invalid option!\n");
+                usage(progname);
             }
         } else break;
     }
