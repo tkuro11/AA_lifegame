@@ -8,6 +8,9 @@
 const int W = 60;
 const int H = 40;
 
+// game flags
+bool random_color = false, debug = false, torus = false;
+
 /// utility routines for terminal control
 void _clear() { printf("\033[2J"); }
 void _home() { printf("\033[0;0f"); }
@@ -27,11 +30,11 @@ int _color_pallete(int col, int cbank)
 
 void usage(char *progname)
 {
-    printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [-d] [filename]\n"
+    printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [-d] [-t] [filename]\n"
             "ColormapList:", progname);
-    for (int i = 1; i< 33; i++) {
+    for (int i = 1; i<= 32; i++) {
         printf("\nMAP %2d: ", i);
-        for (int j = 1; j< 8; j++) {
+        for (int j = 1; j<= 8; j++) {
             _color(_color_pallete(j, i));
             printf("　");
         }
@@ -52,6 +55,10 @@ int _sum_surrounding(char board[H][W], int x, int y) {
 
     for (int i= 0; i < 8; i++) {
         int lx = x+d[i][0], ly = y+d[i][1];
+        if (torus) {
+            lx = (lx + W) % W;
+            ly = (ly + H) % H;
+        }
         if (0 <= lx && lx < W &&
             0 <= ly && ly < H && board[ly][lx] == 1) {
             sum += 1;
@@ -156,7 +163,7 @@ int check_converged(char board[H][W])
     hash[hash_ptr] = _hash_board(board);
     hash_ptr = (hash_ptr + 1) % N;
 
-    for (int s = 1; s< MAX_STRIDE; s++) {
+    for (int s = 1; s<= MAX_STRIDE-1; s++) {
         int v = _check_stride(hash, s);
         if (v > max) {max = v;}
     }
@@ -239,7 +246,6 @@ int main(int argc, char** argv)
     int generation = 1;
     int wait = 50;  // ms
     int cbank = 0;
-    bool random_color = false, debug = false;
     char *progname = argv[0];
 
     atexit(_reset_terminal);
@@ -256,6 +262,10 @@ int main(int argc, char** argv)
                 debug = true;
                 SHIFT_ARGS(1);
             } else
+            if (opt == 't') {
+                torus = true;
+                SHIFT_ARGS(1);
+            } else 
             if (opt == 'w') {
                 wait = atoi(argv[1]);
                 SHIFT_ARGS(2);
