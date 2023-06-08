@@ -26,6 +26,8 @@ following options are available:
                The list of available colormap is 
                obtaind using the '-h' option.
 
+   -t          making the world a torus(left<->right, top<->bottom is connected)
+
    -d          show debug information (convergence meter)
 
    -w wait     Set animation cycle to wait(in ms)
