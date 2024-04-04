@@ -245,7 +245,7 @@ int main(int argc, char** argv)
     atexit(_reset_terminal);
     srand((unsigned int) time(NULL));
 
-    SHIFT_ARGS(1); // cut executable name
+    SHIFT_ARGS(1); // cut argv[0](program name)
     while (argc > 0) {
         if (argv[0][0] == '-') {
             char opt = argv[0][1];
@@ -264,7 +264,7 @@ int main(int argc, char** argv)
                 if (isdigit(argv[1][0])) {
                     cbank = atoi(argv[1]);
                     SHIFT_ARGS(2);
-                } else { // choose color randomly
+                } else { // choose a color at random
                     cbank = (rand() % 32+1);
                     random_color = true;
                     SHIFT_ARGS(1);
