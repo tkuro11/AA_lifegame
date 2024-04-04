@@ -8,16 +8,19 @@
 const int W = 60;
 const int H = 40;
 
+// game flags
+bool random_color = false, debug = false, torus = false;
+
 /// utility routines for terminal control
-void _clear() { printf("\033[2J"); }
-void _home() { printf("\033[0;0f"); }
-void _color(int c) {
+static void _clear() { printf("\033[2J"); }
+static void _home() { printf("\033[0;0f"); }
+static void _color(int c) {
     if (c < 0) { printf("\033[0m");
     } else     { printf("\033[48;5;%dm", c); }
 }
-void _reset_terminal() { _color(-1); }
+static void _reset_terminal() { _color(-1); }
 
-int _color_pallete(int col, int cbank)
+static int _color_pallete(int col, int cbank)
 {
     if (col == 0)
         return 0;
@@ -27,11 +30,11 @@ int _color_pallete(int col, int cbank)
 
 void usage(char *progname)
 {
-    printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [-d] [filename]\n"
+    printf( "Usage:   %s [-h] [-w wait] [-c colormap#] [-d] [-t] [filename]\n"
             "ColormapList:", progname);
-    for (int i = 1; i< 33; i++) {
+    for (int i = 1; i<= 32; i++) {
         printf("\nMAP %2d: ", i);
-        for (int j = 1; j< 8; j++) {
+        for (int j = 1; j<= 8; j++) {
             _color(_color_pallete(j, i));
             printf("　");
         }
@@ -44,7 +47,7 @@ void usage(char *progname)
 
 /// [private] Function to count the number of live points in the 
 //  8-neighborhood of specified point.
-int _sum_surrounding(char board[H][W], int x, int y) {
+static int _sum_surrounding(char board[H][W], int x, int y) {
     int sum = 0;
     int d[8][2]= { {-1,-1}, {0, -1}, {1, -1},
                    {-1, 0},          {1,  0},
@@ -52,6 +55,10 @@ int _sum_surrounding(char board[H][W], int x, int y) {
 
     for (int i= 0; i < 8; i++) {
         int lx = x+d[i][0], ly = y+d[i][1];
+        if (torus) {
+            lx = (lx + W) % W;
+            ly = (ly + H) % H;
+        }
         if (0 <= lx && lx < W &&
             0 <= ly && ly < H && board[ly][lx] == 1) {
             sum += 1;
@@ -63,7 +70,7 @@ int _sum_surrounding(char board[H][W], int x, int y) {
 
 /// [private] Function to count the number of live points in the
 //  8-neighborhood of each point.
-void _count_board(char board[H][W], char ret[H][W])
+static void _count_board(char board[H][W], char ret[H][W])
 {
     for (int y = 0; y< H; y++) {
         for (int x = 0; x< W; x++) {
@@ -74,7 +81,7 @@ void _count_board(char board[H][W], char ret[H][W])
 
 /// [private] Function to get "fingerprint" of the board situation
 //  (in the current impl. it's just by counting live point.)
-long _hash_board(char board[H][W])
+static long _hash_board(char board[H][W])
 {
     unsigned int ret = 0;
 
@@ -124,7 +131,7 @@ bool load_board(char *filename, char board[H][W])
 #define N 16      // the size of ring buffer (MUSTBE even)
 const int MAX_STRIDE = N/2;
 
-int _check_stride(unsigned int ary[], int stride)
+static int _check_stride(unsigned int ary[], int stride)
 {
     int level = 0;
     for (int j = 0; j < stride; j++) {
@@ -156,7 +163,7 @@ int check_converged(char board[H][W])
     hash[hash_ptr] = _hash_board(board);
     hash_ptr = (hash_ptr + 1) % N;
 
-    for (int s = 1; s< MAX_STRIDE; s++) {
+    for (int s = 1; s<= MAX_STRIDE-1; s++) {
         int v = _check_stride(hash, s);
         if (v > max) {max = v;}
     }
@@ -221,7 +228,7 @@ void update_board_state(char board[H][W])
     }
 }
 
-int _shift_array(char* ary[], int size, int n_remove)
+static int _shift_array(char* ary[], int size, int n_remove)
 {
     int new_size = size - n_remove;
     for (int i = 0; i< new_size; i++) {
@@ -239,7 +246,6 @@ int main(int argc, char** argv)
     int generation = 1;
     int wait = 50;  // ms
     int cbank = 0;
-    bool random_color = false, debug = false;
     char *progname = argv[0];
 
     atexit(_reset_terminal);
@@ -256,6 +262,10 @@ int main(int argc, char** argv)
                 debug = true;
                 SHIFT_ARGS(1);
             } else
+            if (opt == 't') {
+                torus = true;
+                SHIFT_ARGS(1);
+            } else 
             if (opt == 'w') {
                 wait = atoi(argv[1]);
                 SHIFT_ARGS(2);
@@ -269,6 +279,9 @@ int main(int argc, char** argv)
                     random_color = true;
                     SHIFT_ARGS(1);
                 }
+            } else {
+                fprintf(stderr, "invalid option!\n");
+                usage(progname);
             }
         } else break;
     }
